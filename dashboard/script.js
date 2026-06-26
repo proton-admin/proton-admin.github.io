@@ -19,53 +19,85 @@ Papa.parse("data.csv", {
 
 });
 
-function initialize(){
+function initialize() {
 
-    const dropdown = document.getElementById("groupBy");
+    const groupDropdown = document.getElementById("groupBy");
+    const countryDropdown = document.getElementById("countryFilter");
 
     const columns = Object.keys(data[0]);
 
-    columns.forEach(col=>{
+    // Populate Country filter
+    countryDropdown.innerHTML = "";
 
-        const option=document.createElement("option");
+    const allOption = document.createElement("option");
+    allOption.value = "All";
+    allOption.textContent = "All";
+    countryDropdown.appendChild(allOption);
 
-        option.value=col;
+    const countries = [...new Set(data.map(r => r.Country).filter(Boolean))].sort();
 
-        option.textContent=col;
-
-        dropdown.appendChild(option);
-
+    countries.forEach(country => {
+        const option = document.createElement("option");
+        option.value = country;
+        option.textContent = country;
+        countryDropdown.appendChild(option);
     });
 
-    dropdown.selectedIndex=0;
+    // Populate Group By dropdown
+    groupDropdown.innerHTML = "";
+
+    columns
+        .filter(c => c !== "Country")
+        .forEach(col => {
+
+            const option = document.createElement("option");
+            option.value = col;
+            option.textContent = col;
+
+            groupDropdown.appendChild(option);
+
+        });
+
+    groupDropdown.selectedIndex = 0;
+
+    groupDropdown.addEventListener("change", updateDashboard);
+    countryDropdown.addEventListener("change", updateDashboard);
 
     updateDashboard();
-
-    dropdown.addEventListener("change",updateDashboard);
-
 }
 
-function updateDashboard(){
+function updateDashboard() {
 
-    const column=document.getElementById("groupBy").value;
+    const groupColumn = document.getElementById("groupBy").value;
+    const selectedCountry = document.getElementById("countryFilter").value;
 
-    const counts={};
+    let filteredData = data;
 
-    data.forEach(row=>{
+    if (selectedCountry !== "All") {
 
-        const value=row[column] || "(Blank)";
+        filteredData = data.filter(
+            row => row.Country === selectedCountry
+        );
 
-        counts[value]=(counts[value]||0)+1;
+    }
+
+    const counts = {};
+
+    filteredData.forEach(row => {
+
+        const value = row[groupColumn] || "(Blank)";
+
+        counts[value] = (counts[value] || 0) + 1;
 
     });
 
-    const labels=Object.keys(counts).sort();
+    const labels = Object.keys(counts).sort();
 
-    const values=labels.map(l=>counts[l]);
+    const values = labels.map(label => counts[label]);
 
-    updateTable(labels,values,column);
+    updateTable(labels, values, groupColumn);
 
-    updateChart(labels,values,column);
+    updateChart(labels, values, groupColumn);
 
 }
 
