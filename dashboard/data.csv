@@ -1,0 +1,6 @@
+Date,Engineer,Country,Status,Priority,Category
+2026-06-20,Alice,Singapore,Open,High,Bug
+2026-06-20,Bob,India,Closed,Low,Feature
+2026-06-21,Alice,Singapore,Open,Medium,Bug
+2026-06-21,Charlie,Japan,Open,High,Support
+2026-06-22,Bob,India,Closed,Low,Feature
