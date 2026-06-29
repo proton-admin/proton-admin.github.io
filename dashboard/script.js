@@ -1,121 +1,352 @@
+// ======================================================
+// Dashboard Configuration
+// ======================================================
+
+const CONFIG = {
+
+    DATASETS: [
+        {
+            name: "TTSH Local Data (All)",
+            file: "ttsh-local-data-all.csv"
+        },
+        {
+            name: "TTSH Local Data (No Duplicates)",
+            file: "ttsh-local-data-no-duplicates.csv"
+        },
+        {
+            name: "PROTON Data (Online)",
+            file: "proton-online-data.csv"
+        }
+    ],
+
+    CATEGORY_COLUMN: "Category",
+    VALUE_COLUMN: "Count",
+    FILTER_COLUMN: "Filter"
+
+};
+
+
+// ======================================================
+// Global State
+// ======================================================
+
+let currentDataset = CONFIG.DATASETS[0];
+
 let data = [];
-let chart;
+let filteredData = [];
 
-Papa.parse("data.csv", {
+let chart = null;
 
-    download: true,
 
-    header: true,
+// ======================================================
+// Startup
+// ======================================================
 
-    skipEmptyLines: true,
+document.addEventListener("DOMContentLoaded", () => {
 
-    complete: function(results){
+    createDatasetButtons();
 
-        data = results.data;
+    attachEventListeners();
 
-        initialize();
-
-    }
+    loadDataset(currentDataset);
 
 });
 
-function initialize() {
 
-    const groupDropdown = document.getElementById("groupBy");
-    const countryDropdown = document.getElementById("countryFilter");
+// ======================================================
+// Event Listeners
+// ======================================================
 
-    const columns = Object.keys(data[0]);
+function attachEventListeners() {
 
-    // Populate Country filter
-    countryDropdown.innerHTML = "";
+    document
+        .getElementById("filterDropdown")
+        .addEventListener("change", updateDashboard);
 
-    const allOption = document.createElement("option");
-    allOption.value = "All";
-    allOption.textContent = "All";
-    countryDropdown.appendChild(allOption);
+    document
+        .getElementById("searchBox")
+        .addEventListener("input", updateDashboard);
 
-    const countries = [...new Set(data.map(r => r.Country).filter(Boolean))].sort();
-
-    countries.forEach(country => {
-        const option = document.createElement("option");
-        option.value = country;
-        option.textContent = country;
-        countryDropdown.appendChild(option);
-    });
-
-    // Populate Group By dropdown
-    groupDropdown.innerHTML = "";
-
-    columns
-        .filter(c => c !== "Country")
-        .forEach(col => {
-
-            const option = document.createElement("option");
-            option.value = col;
-            option.textContent = col;
-
-            groupDropdown.appendChild(option);
-
-        });
-
-    groupDropdown.selectedIndex = 0;
-
-    groupDropdown.addEventListener("change", updateDashboard);
-    countryDropdown.addEventListener("change", updateDashboard);
-
-    updateDashboard();
 }
 
-function updateDashboard() {
 
-    const groupColumn = document.getElementById("groupBy").value;
-    const selectedCountry = document.getElementById("countryFilter").value;
+// ======================================================
+// Dataset Switch Buttons
+// ======================================================
 
-    let filteredData = data;
+function createDatasetButtons() {
 
-    if (selectedCountry !== "All") {
+    const container =
+        document.getElementById("datasetSwitcher");
 
-        filteredData = data.filter(
-            row => row.Country === selectedCountry
+    container.innerHTML = "";
+
+    CONFIG.DATASETS.forEach(dataset => {
+
+        const button = document.createElement("button");
+
+        button.className = "dataset-btn";
+
+        if (dataset.file === currentDataset.file) {
+
+            button.classList.add("active");
+
+        }
+
+        button.textContent = dataset.name;
+
+        button.onclick = () => {
+
+            currentDataset = dataset;
+
+            document
+                .querySelectorAll(".dataset-btn")
+                .forEach(b => b.classList.remove("active"));
+
+            button.classList.add("active");
+
+            loadDataset(dataset);
+
+        };
+
+        container.appendChild(button);
+
+    });
+
+}
+
+
+// ======================================================
+// Load CSV
+// ======================================================
+
+function loadDataset(dataset) {
+
+    Papa.parse(dataset.file, {
+
+        download: true,
+
+        header: true,
+
+        skipEmptyLines: true,
+
+        dynamicTyping: true,
+
+        complete: function(results) {
+
+            data = results.data;
+
+            populateFilterDropdown();
+
+            updateDashboard();
+
+        }
+
+    });
+
+}
+
+
+// ======================================================
+// Populate Filter Dropdown
+// ======================================================
+
+function populateFilterDropdown() {
+
+    const dropdown =
+        document.getElementById("filterDropdown");
+
+    const previousValue = dropdown.value;
+
+    dropdown.innerHTML = "";
+
+    const uniqueValues = [
+
+        ...new Set(
+
+            data
+
+                .map(row => row[CONFIG.FILTER_COLUMN])
+
+                .filter(value =>
+                    value !== undefined &&
+                    value !== null &&
+                    String(value).trim() !== ""
+                )
+
+        )
+
+    ].sort();
+
+    console.log(data);
+
+    uniqueValues.forEach(value => {
+
+        dropdown.add(new Option(value, value));
+
+    });
+
+    if ([...dropdown.options].some(o => o.value === previousValue)) {
+
+        dropdown.value = previousValue;
+
+    }
+
+}
+
+
+// ======================================================
+// Apply Filters
+// ======================================================
+
+function applyFilters() {
+
+    filteredData = [...data];
+
+    const selectedFilter =
+        document.getElementById("filterDropdown").value;
+
+    const search =
+        document.getElementById("searchBox")
+            .value
+            .trim()
+            .toLowerCase();
+
+    if (selectedFilter !== "All") {
+
+        filteredData = filteredData.filter(row =>
+
+            row[CONFIG.FILTER_COLUMN] === selectedFilter
+
         );
 
     }
 
-    const counts = {};
+    if (search !== "") {
 
-    filteredData.forEach(row => {
+        filteredData = filteredData.filter(row =>
 
-        const value = row[groupColumn] || "(Blank)";
+            Object.values(row).some(value =>
 
-        counts[value] = (counts[value] || 0) + 1;
+                String(value)
+                    .toLowerCase()
+                    .includes(search)
 
-    });
+            )
 
-    const labels = Object.keys(counts).sort();
+        );
 
-    const values = labels.map(label => counts[label]);
-
-    updateTable(labels, values, groupColumn);
-
-    updateChart(labels, values, groupColumn);
+    }
 
 }
 
-function updateTable(labels,values,column){
 
-    document.querySelector("th").textContent=column;
+// ======================================================
+// Main Update Function
+// ======================================================
 
-    const tbody=document.getElementById("countTable");
+function updateDashboard() {
 
-    tbody.innerHTML="";
+    applyFilters();
 
-    labels.forEach((label,i)=>{
+    updateChart();
 
-        const tr=document.createElement("tr");
+    updateSummaryTable();
 
-        tr.innerHTML=`
-            <td>${label}</td>
-            <td>${values[i]}</td>
+    updateRawTable();
+
+}
+
+// ======================================================
+// Chart
+// ======================================================
+
+function updateChart() {
+
+    const labels = filteredData.map(row =>
+        row[CONFIG.CATEGORY_COLUMN]
+    );
+
+    const values = filteredData.map(row =>
+        Number(row[CONFIG.VALUE_COLUMN]) || 0
+    );
+
+    if (chart) {
+        chart.destroy();
+    }
+
+    chart = new Chart(
+        document.getElementById("chart"),
+        {
+            type: "bar",
+
+            data: {
+                labels: labels,
+
+                datasets: [
+                    {
+                        label: CONFIG.VALUE_COLUMN,
+                        data: values,
+                        borderWidth: 1
+                    }
+                ]
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// Summary Table
+// ======================================================
+
+function updateSummaryTable() {
+
+    const tbody =
+        document.getElementById("countTable");
+
+    tbody.innerHTML = "";
+
+    filteredData.forEach(row => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>${row[CONFIG.CATEGORY_COLUMN]}</td>
+
+            <td>${Number(
+                row[CONFIG.VALUE_COLUMN]
+            ).toLocaleString()}</td>
+
         `;
 
         tbody.appendChild(tr);
@@ -124,52 +355,82 @@ function updateTable(labels,values,column){
 
 }
 
-function updateChart(labels,values,column){
 
-    if(chart){
+// ======================================================
+// Raw Data Table
+// ======================================================
 
-        chart.destroy();
+function updateRawTable() {
+
+    const table =
+        document.getElementById("rawTable");
+
+    table.innerHTML = "";
+
+    if (filteredData.length === 0) {
+
+        table.innerHTML =
+            "<tr><td>No matching rows.</td></tr>";
+
+        return;
 
     }
 
-    chart=new Chart(document.getElementById("chart"),{
+    const columns =
+        Object.keys(filteredData[0]);
 
-        type:"line",
 
-        data:{
 
-            labels:labels,
+    // ---------- Header ----------
 
-            datasets:[{
+    const thead =
+        document.createElement("thead");
 
-                label:"Count",
+    const headerRow =
+        document.createElement("tr");
 
-                data:values,
+    columns.forEach(column => {
 
-                tension:0.3,
+        const th =
+            document.createElement("th");
 
-                fill:false
+        th.textContent = column;
 
-            }]
-
-        },
-
-        options:{
-
-            responsive:true,
-
-            plugins:{
-                legend:{
-                    display:false
-                },
-                title:{
-                    display:true,
-                    text:column
-                }
-            }
-
-        }
+        headerRow.appendChild(th);
 
     });
+
+    thead.appendChild(headerRow);
+
+    table.appendChild(thead);
+
+
+
+    // ---------- Body ----------
+
+    const tbody =
+        document.createElement("tbody");
+
+    filteredData.forEach(row => {
+
+        const tr =
+            document.createElement("tr");
+
+        columns.forEach(column => {
+
+            const td =
+                document.createElement("td");
+
+            td.textContent = row[column];
+
+            tr.appendChild(td);
+
+        });
+
+        tbody.appendChild(tr);
+
+    });
+
+    table.appendChild(tbody);
 
 }

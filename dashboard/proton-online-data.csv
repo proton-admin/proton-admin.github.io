@@ -1,0 +1,35 @@
+Category,Count,Filter
+OD,14493,Eye
+OS,15172,Eye
+UltraSound,230,Modality
+OCT,6214,Modality
+Chest XRAY,5,Modality
+Fundus AF,1556,Modality
+FFA,13407,Modality
+ICGA,1449,Modality
+ASOCT,860,Modality
+Color Fundus,5783,Modality
+OCTA,841,Modality
+CT Scan,12,Modality
+Other,166,Modality
+India,14008,Per Country
+Colombia,4283,Per Country
+United States,2672,Per Country
+Turkey,1971,Per Country
+USA,1858,Per Country
+Singapore,1633,Per Country
+Indonesia,1056,Per Country
+China,881,Per Country
+Argentina,606,Per Country
+Switzerland,346,Per Country
+Belgium,310,Per Country
+Italy,225,Per Country
+Nepal,150,Per Country
+Greece,135,Per Country
+Germany,115,Per Country
+Turkey,70,Per Country
+None,66,Per Country
+Tunisia,64,Per Country
+Israel,23,Per Country
+Germany,2,Per Country
+Egypt,2,Per Country
