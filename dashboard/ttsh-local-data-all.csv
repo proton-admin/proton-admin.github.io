@@ -9,3 +9,18 @@ OCTOMERIA,104,Patients Recruited
 COTS/PROTON,142,Patients Recruited
 SaMD,204,Patients Recruited
 VHI,120,Patients Recruited
+OCT,6021,Modalities - CVI Study
+Fundus,781,Modalities - CVI Study
+ASOCT,54,Modalities - CVI Study
+OCT,8129,Modalities - OCTOMERIA Study
+Fundus,656,Modalities - OCTOMERIA Study
+ASOCT,624,Modalities - OCTOMERIA Study
+OCT,11328,Modalities - VHI Study
+Fundus,1008,Modalities - VHI Study
+ASOCT,1458,Modalities - VHI Study
+OCT,20647,Modalities - PROTON Study
+Fundus,1647,Modalities - PROTON Study
+ASOCT,2334,Modalities - PROTON Study
+OCT,19832,Modalities - SaMD Study
+Fundus,1394,Modalities - SaMD Study
+ASOCT,666,Modalities - SaMD Study
